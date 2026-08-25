@@ -1,0 +1,17 @@
+# Caddy terminates TLS and proxies to the loopback daemon. The daemon never
+# binds a public interface itself.
+drop.example.com {
+    reverse_proxy 127.0.0.1:7070 {
+        # Large handoffs stream for a long time; do not cut them off.
+        transport http {
+            read_timeout 0
+            write_timeout 0
+        }
+    }
+
+    # Uploads are streamed to disk, so no request body limit is imposed here.
+    # Size is governed by the server's own limits and disk admission.
+    request_body {
+        max_size 0
+    }
+}

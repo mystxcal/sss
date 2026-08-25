@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sss.local/schema/server-config-v1.json",
+  "title": "SSS Server Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "server",
+    "auth",
+    "storage",
+    "limits"
+  ],
+  "properties": {
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "listen",
+        "public_url",
+        "unix_socket"
+      ],
+      "properties": {
+        "listen": {
+          "type": "string"
+        },
+        "public_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "unix_socket": {
+          "type": "string"
+        },
+        "shutdown_grace_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "username",
+        "password_hash"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "const": "sss"
+        },
+        "password_hash": {
+          "type": "string",
+          "minLength": 20
+        },
+        "failed_attempts_per_minute": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_dir",
+        "db_path"
+      ],
+      "properties": {
+        "data_dir": {
+          "type": "string"
+        },
+        "db_path": {
+          "type": "string"
+        },
+        "staging_ttl_minutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "local_claim_grace_minutes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default_ttl_minutes",
+        "max_ttl_minutes",
+        "disk_high_watermark_percent"
+      ],
+      "properties": {
+        "default_ttl_minutes": {
+          "type": "integer",
+          "const": 30
+        },
+        "max_ttl_minutes": {
+          "type": "integer",
+          "const": 3000
+        },
+        "max_transfer_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_files": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_note_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "disk_high_watermark_percent": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 99
+        },
+        "max_concurrent_uploads": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_concurrent_downloads": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_materialize_workers": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sss.local/schema/manifest-v1.json",
+  "title": "SSS Transfer Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "transfer_id",
+    "created_at",
+    "roots",
+    "segments",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "transfer_id": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 128
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 16384
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      }
+    },
+    "digest_algorithm": {
+      "type": "string",
+      "const": "blake3"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "wire_size",
+          "digest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "raw",
+              "tar_zstd"
+            ]
+          },
+          "wire_size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "type",
+              "mtime_unix_ns",
+              "mode"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/portablePath"
+              },
+              "type": {
+                "const": "directory"
+              },
+              "mtime_unix_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mode": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "type",
+              "size",
+              "mtime_unix_ns",
+              "mode",
+              "digest",
+              "segment_id"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/portablePath"
+              },
+              "type": {
+                "const": "file"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mtime_unix_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mode": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "segment_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "segment_offset": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "portablePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$",
+      "description": "Slash-separated relative path. Semantic validation must also reject empty components, NUL, duplicate normalized paths, and platform-impossible destinations."
+    }
+  }
+}

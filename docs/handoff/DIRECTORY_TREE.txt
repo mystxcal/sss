@@ -1,0 +1,61 @@
+sss-frontier-agent-handoff-v1.0.0/
+├── contracts/
+│   ├── cli-contract.md
+│   ├── compatibility.md
+│   ├── config.schema.json
+│   ├── error-catalog.md
+│   ├── http-contract.md
+│   ├── manifest.schema.json
+│   ├── openapi.yaml
+│   ├── storage-lifecycle.md
+│   └── versioning.md
+├── deployment/
+│   ├── Caddyfile.example
+│   ├── config.example.toml
+│   ├── install-debian11.md
+│   ├── sss.env.example
+│   ├── sss.service
+│   └── upgrade-and-recovery.md
+├── evals/
+│   ├── blackbox-scenarios.yaml
+│   ├── contract-smoke.ps1
+│   ├── contract-smoke.sh
+│   └── release-gate.md
+├── examples/
+│   ├── _netrc.example
+│   ├── agent-recipes.md
+│   ├── curl-linux.sh
+│   ├── curl-windows.ps1
+│   └── netrc.example
+├── management/
+│   ├── evidence-template.md
+│   ├── merge-policy.md
+│   ├── review-checklist.md
+│   ├── status-format.md
+│   ├── subagent-work-order-template.md
+│   └── task-board.md
+├── ACCEPTANCE_TESTS.md
+├── AGENTS.md
+├── ARCHITECTURE.md
+├── CHANGE_CONTROL.md
+├── DECISIONS.md
+├── DESIGN_REVIEW_QUESTIONS.md
+├── FAILURE_AND_CHAOS_TESTS.md
+├── GLOSSARY.md
+├── HANDOFF_MANIFEST.json
+├── IMPLEMENTATION_CHECKLIST.md
+├── IMPLEMENTATION_PLAN.md
+├── MANAGER_AGENT_MANDATE.md
+├── MANAGER_PROMPT.md
+├── OPERATIONS.md
+├── OWNER_INTENT.md
+├── PERFORMANCE_TARGETS.md
+├── PRODUCT_SPEC.md
+├── QUALITY_GATES.md
+├── README.md
+├── RELEASE_PLAN.md
+├── REPO_LAYOUT.md
+├── RISKS.md
+├── SECURITY_MINIMUM.md
+├── START_HERE.md
+└── TASK_GRAPH.yaml

@@ -1,0 +1,29 @@
+[server]
+listen = "127.0.0.1:7070"
+public_url = "https://drop.example.com"
+unix_socket = "/run/sss/sssd.sock"
+shutdown_grace_seconds = 30
+
+[auth]
+username = "sss"
+# Generate with: sss hash-password
+password_hash = "$argon2id$REPLACE_ME"
+failed_attempts_per_minute = 20
+
+[storage]
+data_dir = "/srv/sss"
+db_path = "/var/lib/sss/sss.db"
+staging_ttl_minutes = 360
+local_claim_grace_minutes = 120
+
+[limits]
+default_ttl_minutes = 30
+max_ttl_minutes = 3000
+# 0 means no fixed cap beyond disk admission.
+max_transfer_bytes = 0
+max_files = 250000
+max_note_bytes = 16384
+disk_high_watermark_percent = 85
+max_concurrent_uploads = 8
+max_concurrent_downloads = 16
+max_materialize_workers = 4

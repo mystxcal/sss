@@ -1,0 +1,32 @@
+{
+  "package": "sss-frontier-agent-handoff",
+  "version": "1.0.0",
+  "created_at": "2026-08-01",
+  "audience": "frontier engineering-manager agent coordinating a code team",
+  "status": "implementation-ready specification and execution package",
+  "implementation_included": false,
+  "primary_entrypoint": "START_HERE.md",
+  "manager_prompt": "MANAGER_PROMPT.md",
+  "frozen_decisions": "DECISIONS.md",
+  "machine_task_graph": "TASK_GRAPH.yaml",
+  "api_contract": "contracts/openapi.yaml",
+  "manifest_contract": "contracts/manifest.schema.json",
+  "release_gate": "evals/release-gate.md",
+  "owner_constraints": {
+    "default_ttl_minutes": 30,
+    "max_ttl_minutes": 3000,
+    "code_characters": 8,
+    "public_auth": "one shared base password over HTTPS Basic auth",
+    "server_target": "single Debian 11 VPS",
+    "cli_optional": true,
+    "vps_local_zero_copy_path": true
+  },
+  "authority_order": [
+    "OWNER_INTENT.md",
+    "DECISIONS.md",
+    "contracts/",
+    "PRODUCT_SPEC.md",
+    "ARCHITECTURE.md",
+    "implementation planning files"
+  ]
+}

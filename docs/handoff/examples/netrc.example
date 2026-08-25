@@ -1,0 +1,3 @@
+machine drop.example.com
+  login sss
+  password replace-me

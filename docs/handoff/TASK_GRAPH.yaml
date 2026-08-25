@@ -1,0 +1,385 @@
+version: 1
+project: sss
+policy:
+  unit_of_work: independently verifiable outcome
+  merge_owner: manager_agent
+  evidence_required: true
+  no_placeholder_completion: true
+
+roles:
+  manager:
+    purpose: architecture ownership, integration, release
+  protocol:
+    purpose: shared contracts, types, compatibility
+  server:
+    purpose: HTTP/local service, state, storage
+  client:
+    purpose: CLI, resumability, cross-platform UX
+  quality:
+    purpose: black-box, fault, compatibility, performance tests
+  operations:
+    purpose: deployment, packaging, runbooks
+
+tasks:
+  - id: T001
+    title: Establish repository and build baseline
+    owner_role: manager
+    depends_on: []
+    deliverables:
+      - Go module and package skeleton
+      - Linux and Windows CI
+      - formatting, vet, unit, race, and cross-build commands
+      - version injection and reproducible build metadata
+    acceptance:
+      - clean checkout builds on Linux
+      - Windows target cross-compiles
+      - empty server starts and stops cleanly
+
+  - id: T002
+    title: Implement shared protocol and error model
+    owner_role: protocol
+    depends_on: [T001]
+    deliverables:
+      - shared request and response types
+      - code normalization
+      - stable error catalog
+      - manifest model and validation
+      - compatibility/version negotiation
+    acceptance:
+      - contract tests cover every error code
+      - malformed paths and codes are rejected deterministically
+
+  - id: T003
+    title: Build black-box contract harness
+    owner_role: quality
+    depends_on: [T001]
+    deliverables:
+      - disposable server fixture
+      - curl-driven smoke tests
+      - byte-for-byte verification
+      - test evidence capture
+    acceptance:
+      - harness can test an externally supplied server URL
+      - failures preserve logs and temporary evidence
+
+  - id: T004
+    title: Establish Debian deployment skeleton
+    owner_role: operations
+    depends_on: [T001]
+    deliverables:
+      - systemd unit
+      - config example
+      - Caddy example
+      - filesystem and user setup instructions
+    acceptance:
+      - clean Debian 11 VM can start health service
+      - service permissions permit only required write paths
+
+  - id: T005
+    title: Implement configuration and base-password authentication
+    owner_role: server
+    depends_on: [T001, T002]
+    deliverables:
+      - config loader
+      - password hash verification
+      - Basic auth middleware
+      - auth rate limiting
+      - redacted logging
+    acceptance:
+      - correct password succeeds
+      - missing and wrong passwords return stable 401 errors
+      - logs never contain Authorization values or plaintext password
+
+  - id: T006
+    title: Implement filesystem and SQLite transfer repository
+    owner_role: server
+    depends_on: [T001, T002]
+    deliverables:
+      - schema and migrations
+      - staging/live/trash repositories
+      - explicit state transitions
+      - atomic rename helpers
+      - startup reconciliation
+    acceptance:
+      - state transition property tests pass
+      - restart at each commit fault point restores a valid state
+      - payload bytes never enter SQLite
+
+  - id: T007
+    title: Implement code allocation, TTL, leases, and janitor
+    owner_role: server
+    depends_on: [T006]
+    deliverables:
+      - secure code generator
+      - transactional uniqueness
+      - commit-based expiry
+      - claim leases
+      - trash cleanup
+    acceptance:
+      - code parsing is case and hyphen tolerant
+      - no code exists before commit
+      - expiry blocks new claims
+      - active claims survive until lease end
+
+  - id: T008
+    title: Implement simple streaming send endpoints
+    owner_role: server
+    depends_on: [T005, T006, T007]
+    deliverables:
+      - POST /s
+      - POST /s/raw
+      - multipart and raw streaming
+      - note and TTL validation
+      - digest and atomic commit
+      - optional idempotency key
+    acceptance:
+      - one-file curl send returns code
+      - multi-file send preserves names and bytes
+      - interrupted request never publishes a code
+      - memory use is independent of transfer size
+
+  - id: T009
+    title: Implement simple receive and metadata endpoints
+    owner_role: server
+    depends_on: [T005, T006, T007]
+    deliverables:
+      - GET /r/{code}
+      - GET /v1/transfers/{code}
+      - single-file raw response
+      - streaming ZIP and TAR
+      - content disposition handling
+    acceptance:
+      - byte-for-byte single-file round trip
+      - multi-file archive round trip
+      - unknown returns 404
+      - expired returns 410
+      - archive generation is streaming
+
+  - id: T010
+    title: Implement disk admission and resource limits
+    owner_role: server
+    depends_on: [T006, T008]
+    deliverables:
+      - reservations
+      - high-watermark checks
+      - max transfer, file, and note limits
+      - insufficient-storage behavior
+    acceptance:
+      - disk pressure never publishes incomplete content
+      - new sends reject while downloads remain available
+      - reservations reconcile after restart
+
+  - id: T011
+    title: Complete simple HTTP black-box suite
+    owner_role: quality
+    depends_on: [T003, T008, T009, T010]
+    deliverables:
+      - single, multi, and raw tests
+      - note and TTL tests
+      - auth and error tests
+      - restart and expiry tests
+      - Linux curl evidence
+    acceptance:
+      - all Milestone 2 scenarios pass against a packaged server
+
+  - id: T012
+    title: Implement protected Unix-socket local API
+    owner_role: server
+    depends_on: [T006, T007, T009]
+    deliverables:
+      - Unix listener
+      - local group authorization
+      - GET /local/r/{code}
+      - read-only path response
+      - cleanup grace
+    acceptance:
+      - local claim returns existing live path
+      - payload bytes are not copied
+      - unauthorized local user cannot use socket
+      - cleanup waits for local grace
+
+  - id: T013
+    title: Implement CLI foundation and output contract
+    owner_role: client
+    depends_on: [T001, T002, T005]
+    deliverables:
+      - configure and auth resolution
+      - command dispatch and aliases
+      - stdout and stderr discipline
+      - JSON output
+      - exit-code mapping
+    acceptance:
+      - shell command substitution receives only code or path
+      - JSON mode emits one valid object
+      - Windows and Linux config paths are correct
+
+  - id: T014
+    title: Implement basic CLI send, receive, inspect, and doctor
+    owner_role: client
+    depends_on: [T009, T012, T013]
+    deliverables:
+      - file and directory enumeration
+      - simple send path
+      - atomic receive destination
+      - metadata inspection
+      - local socket auto-detection
+      - doctor checks
+    acceptance:
+      - documented CLI flows pass on Linux
+      - no existing destination is silently overwritten
+      - local VPS receive returns existing path
+      - changed input during send is detected
+
+  - id: T015
+    title: Validate Windows client behavior
+    owner_role: quality
+    depends_on: [T014]
+    deliverables:
+      - native Windows execution tests
+      - PowerShell curl examples
+      - path and filename compatibility cases
+      - archive extraction verification
+    acceptance:
+      - send and receive pass on a clean Windows environment
+      - reserved names and separator edge cases fail safely
+      - output contract matches Linux
+
+  - id: T016
+    title: Implement advanced resumable upload API
+    owner_role: server
+    depends_on: [T006, T007, T010]
+    deliverables:
+      - POST /v1/transfers
+      - HEAD and PATCH upload resources
+      - persisted offsets
+      - idempotent commit
+      - segment digest verification
+    acceptance:
+      - upload resumes after client and server restart
+      - offset mismatch is deterministic
+      - duplicate commit returns the original result
+      - partial segments never become committed
+
+  - id: T017
+    title: Implement hybrid client segment planner
+    owner_role: client
+    depends_on: [T013, T016]
+    deliverables:
+      - raw large-file segments
+      - bounded tar.zst small-file packs
+      - resumable local state
+      - source identity and change checks
+      - bounded concurrent upload
+    acceptance:
+      - giant file is not copied into a whole-transfer archive
+      - 10000 tiny files do not create 10000 HTTP requests
+      - rerun resumes unchanged sources
+      - changed source fails clearly
+
+  - id: T018
+    title: Implement secure server materializer
+    owner_role: server
+    depends_on: [T002, T006, T016]
+    deliverables:
+      - raw segment placement
+      - safe tar.zst extraction
+      - path, type, count, and size validation
+      - file digest verification
+      - read-only final payload
+    acceptance:
+      - traversal and duplicate-path corpus is rejected
+      - digest mismatch cannot commit
+      - portable metadata round trips
+      - no unsupported file type materializes
+
+  - id: T019
+    title: Implement resumable remote receive
+    owner_role: client
+    depends_on: [T009, T013, T016, T018]
+    deliverables:
+      - claim sessions
+      - range segment download
+      - resumable local state
+      - pack extraction
+      - atomic final rename
+    acceptance:
+      - interrupted receive resumes
+      - partial final directory is never visible
+      - final manifest verification passes
+      - claim can finish after code expiry within lease
+
+  - id: T020
+    title: Implement admin status, graceful shutdown, and reconciliation tooling
+    owner_role: server
+    depends_on: [T006, T007, T010, T016]
+    deliverables:
+      - sss admin status
+      - cleanup command
+      - readiness state
+      - graceful shutdown
+      - reconciliation report
+    acceptance:
+      - status reports live, staging, reserved, and reclaimable bytes
+      - shutdown preserves resumable offsets
+      - readiness remains false until reconciliation completes
+
+  - id: T021
+    title: Execute fault-injection and chaos matrix
+    owner_role: quality
+    depends_on: [T011, T012, T016, T018, T019, T020]
+    deliverables:
+      - process-kill matrix
+      - disk-full tests
+      - corrupted segment tests
+      - expiry and lease races
+      - startup recovery evidence
+    acceptance:
+      - every required fault point has observed evidence
+      - no test leaves a code resolving to incomplete data
+      - no test exposes partial receive output
+
+  - id: T022
+    title: Performance characterize and remove bottlenecks
+    owner_role: quality
+    depends_on: [T017, T018, T019, T021]
+    deliverables:
+      - large-file throughput results
+      - small-file tree results
+      - memory and CPU profiles
+      - concurrency tuning
+    acceptance:
+      - memory remains bounded
+      - large transfer approaches available link or disk limit
+      - small-file packs materially reduce request count
+      - no optimization weakens correctness gates
+
+  - id: T023
+    title: Produce production packaging and release assets
+    owner_role: operations
+    depends_on: [T014, T015, T020, T021]
+    deliverables:
+      - Linux amd64 and arm64 binaries
+      - Windows binaries
+      - aliases and shims
+      - checksums
+      - systemd, Caddy, and config assets
+      - install, upgrade, and recovery docs
+    acceptance:
+      - clean Debian 11 deployment passes smoke tests
+      - clean Windows client passes smoke tests
+      - artifacts include version metadata and checksums
+
+  - id: T024
+    title: Independent release audit
+    owner_role: manager
+    depends_on: [T022, T023]
+    deliverables:
+      - contract audit
+      - documentation-command audit
+      - clean-environment demonstration
+      - known limitations
+      - final evidence report
+    acceptance:
+      - every quality gate is passed or release is blocked
+      - no production TODO or placeholder path remains
+      - release report links raw evidence

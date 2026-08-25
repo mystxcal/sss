@@ -1,0 +1,112 @@
+version: 1
+scenarios:
+  - id: auth_missing
+    operation: GET /v1/info
+    expected_http: 401
+    expected_error: AUTH_REQUIRED
+
+  - id: auth_wrong
+    operation: GET /v1/info with wrong Basic password
+    expected_http: 401
+    expected_error: AUTH_INVALID
+
+  - id: simple_single_roundtrip
+    operation: POST /s then GET /r/{code}
+    expected:
+      - valid_code
+      - byte_identity
+      - second_receive_succeeds
+
+  - id: simple_multi_roundtrip
+    operation: multipart repeated file fields then auto receive
+    expected:
+      - zip_response
+      - exact_names
+      - byte_identity
+
+  - id: raw_stream_roundtrip
+    operation: POST /s/raw
+    expected:
+      - exact_filename
+      - byte_identity
+
+  - id: ttl_default
+    operation: POST /s without ttl
+    expected:
+      - ttl_minutes_equals_30_from_commit
+
+  - id: ttl_max
+    operation: POST /s with ttl 3000
+    expected:
+      - accepted
+
+  - id: ttl_over_max
+    operation: POST /s with ttl 3001
+    expected_http: 422
+    expected_error: TTL_OUT_OF_RANGE
+
+  - id: expiry
+    operation: claim before and after expiry
+    expected:
+      - before_succeeds
+      - after_http_410
+      - after_error_TRANSFER_EXPIRED
+
+  - id: code_normalization
+    operation: receive all case and hyphen variants
+    expected:
+      - all_valid_variants_resolve_same_transfer
+
+  - id: multi_receiver
+    operation: concurrent receive from two clients
+    expected:
+      - both_succeed
+      - byte_identity
+
+  - id: interrupted_simple_upload
+    operation: terminate request mid-body
+    expected:
+      - no_committed_code
+      - staging_reclaimed
+
+  - id: local_path
+    operation: GET /local/r/{code} on Unix socket
+    expected:
+      - path_inside_live_root
+      - no_payload_copy
+      - read_only
+
+  - id: restart_after_commit
+    operation: restart daemon
+    expected:
+      - code_still_resolves
+      - expiry_unchanged
+
+  - id: disk_pressure
+    operation: send below free-space threshold
+    expected_http: 507
+    expected_error: INSUFFICIENT_STORAGE
+    expected:
+      - existing_download_still_works
+
+  - id: resumable_upload
+    operation: interrupt PATCH and resume
+    expected:
+      - resume_from_server_offset
+      - final_byte_identity
+
+  - id: resumable_receive
+    operation: interrupt range download and resume
+    expected:
+      - no_partial_final_path
+      - final_byte_identity
+
+  - id: changed_source
+    operation: mutate source between resume attempts
+    expected_error: SOURCE_CHANGED
+
+  - id: traversal_pack
+    operation: upload pack with parent path entry
+    expected_error: INVALID_PATH
+    expected:
+      - nothing_outside_staging_root

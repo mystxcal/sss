@@ -1,0 +1,8 @@
+/bin/
+/dist/
+*.db
+*.db-wal
+*.db-shm
+
+# Local-only operational notes (host, credentials). Never commit.
+*.local.md

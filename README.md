@@ -9,6 +9,9 @@ side sends and gets eight characters back. The other side types those eight
 characters and gets the files. The server holds them for half an hour and then
 forgets them.
 
+For live transfers where both machines are online together, see
+[RIFT](https://github.com/mystxcal/rift).
+
 The code is a locator, not a password. Authentication is separate: one shared
 base password for every trusted device, over HTTPS, with no accounts to create.
 
